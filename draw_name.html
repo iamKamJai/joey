@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>人名抽獎系統</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: #f9fbff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    select, button {
+      font-size: 1.1em;
+      padding: 10px;
+      margin: 5px;
+    }
+
+    .spinner {
+      margin: 20px auto;
+      width: 50px;
+      height: 50px;
+      border: 5px solid #ccc;
+      border-top: 5px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result, .history, .remaining {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      width: 90%;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .highlight {
+      font-weight: bold;
+      font-size: 1.5em;
+      color: #d32f2f;
+      animation: fadeIn 1s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎉 人名抽獎系統 🎉</h1>
+
+  <div>
+    每次抽幾個人：
+    <select id="drawCount">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+    </select>
+    <button onclick="draw()">抽獎</button>
+    <button onclick="resetDraw()">重設</button>
+  </div>
+
+  <div class="spinner" id="spinner"></div>
+
+  <div class="result" id="currentResult"></div>
+  <div class="history" id="historyLog"></div>
+  <div class="remaining" id="remainingList"></div>
+
+  <script>
+    const allNames = [
+      "6A01 陳鈺盈","6A02 鄭伊琇","6A06 孔藝頤","6A08 林宛旻","6A09 李穎斯","6A12 伍倩葶",
+      "6A14 王子怡","6A15 黃筠然","6A16 王嬿婷","6A17 胡美錡","6A18 丘曉晴","6A19 楊梓寧",
+      "6A21 黃仲升","6A22 甘子玄","6A23 林朗翹","6A24 黎勁濤","6A25 李柏橋","6A26 廖城鑫",
+      "6A27 吳燁林","6A28 潘信銘","6A29 謝偉烽","6A30 黃柏然","6A31 楊景烽","6A32 姚浩然",
+      "6M01 區雪琳","6M02 鄭晞琳","6M03 張欣樺","6M04 蔡思睿","6M05 黃靖喬","6M06 黃婉倩",
+      "6M10 梁紫恩","6M11 馬惠洵","6M12 麥金寶","6M13 潘梓晴","6M14 馬稀淋","6M17 王爾洛瑪絲",
+      "6M18 姚熙悅","6M19 葉祖岏","6M25 黎展鳴","6M26 林浩威","6M28 麥平關","6M29 吳鈞澤",
+      "6M30 吳廷驁","6M32 易家祺","6R01 歐海瑤","6R02 陳曉潼","6R03 張鈞彥","6R04 鍾葆茹",
+      "6R05 夏嘉慧","6R06 黃錦涓","6R07 梁桂婷","6R08 阮慧淇","6R09 冼樂茵","6R11 黃楚瑜",
+      "6R12 黃森榆","6R15 劉曉鋒","6R17 譚振華","6R18 溫俊泰","6R19 黃焯賢","6R20 黃俊文",
+      "6R21 黃朗然","6R22 胡明凱","6Y02 黃嘉琪","6Y03 賴穎桐","6Y04 梁穎琳","6Y08 吳倩儀",
+      "6Y09 莎蘊","6Y10 戴舒菲","6Y11 陳進殷","6Y13 馮甯雋","6Y16 麥睿謙","6Y17 吳宇軒",
+      "6Y19 黃鎮誠","6Y20 余錦權","6Y21 余世豪"
+    ];
+
+    let remaining = [...allNames];
+    let history = [];
+    const spinner = document.getElementById("spinner");
+    const resultEl = document.getElementById("currentResult");
+    const historyEl = document.getElementById("historyLog");
+    const remainingEl = document.getElementById("remainingList");
+
+    function draw() {
+      const count = parseInt(document.getElementById("drawCount").value);
+      if (remaining.length < count) {
+        alert("剩餘人數不足，請重設抽獎！");
+        return;
+      }
+
+      // 動畫開始
+      spinner.style.display = "block";
+      resultEl.innerHTML = "";
+      setTimeout(() => {
+        const drawn = [];
+        for (let i = 0; i < count; i++) {
+          const index = Math.floor(Math.random() * remaining.length);
+          drawn.push(remaining.splice(index, 1)[0]);
+        }
+
+        // 顯示結果
+        resultEl.innerHTML = `<div class="highlight">🎯 抽中：${drawn.join("、")}</div>`;
+        history.push(drawn);
+        updateHistory();
+        updateRemaining();
+        spinner.style.display = "none";
+      }, 1000);
+    }
+
+    function updateHistory() {
+      historyEl.innerHTML = "<h3>📜 歷史抽出記錄</h3>";
+      history.forEach((group, index) => {
+        historyEl.innerHTML += `<div>第 ${index + 1} 次：${group.join("、")}</div>`;
+      });
+    }
+
+    function updateRemaining() {
+      remainingEl.innerHTML = `<h3>🧑‍🎓 剩餘未抽人名 (${remaining.length} 位)</h3>`;
+      remainingEl.innerHTML += `<div>${remaining.join("、")}</div>`;
+    }
+
+    function resetDraw() {
+      if (confirm("確定要重設所有抽獎記錄？")) {
+        remaining = [...allNames];
+        history = [];
+        resultEl.innerHTML = "";
+        historyEl.innerHTML = "";
+        updateRemaining();
+      }
+    }
+
+    // 初始載入
+    updateRemaining();
+  </script>
+
+</body>
+</html>
